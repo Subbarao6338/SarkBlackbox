@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="dns_mode_entries">
+        <item>System DNS (Default)</item>
+        <item>Cloudflare (1.1.1.1)</item>
+        <item>Google (8.8.8.8)</item>
+        <item>AdGuard (94.140.14.14)</item>
+        <item>Custom DNS</item>
+    </string-array>
+
+    <string-array name="dns_mode_values">
+        <item>system</item>
+        <item>cloudflare</item>
+        <item>google</item>
+        <item>adguard</item>
+        <item>custom</item>
+    </string-array>
+</resources>

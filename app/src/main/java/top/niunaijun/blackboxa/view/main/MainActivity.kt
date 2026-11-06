@@ -13,6 +13,7 @@ import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.input.input
+import com.afollestad.materialdialogs.list.listItems
 import top.niunaijun.blackbox.BlackBoxCore
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.app.App
@@ -20,6 +21,7 @@ import top.niunaijun.blackboxa.app.AppManager
 import top.niunaijun.blackboxa.databinding.ActivityMainBinding
 import top.niunaijun.blackboxa.util.Resolution
 import top.niunaijun.blackboxa.util.inflate
+import top.niunaijun.blackboxa.util.toast
 import top.niunaijun.blackboxa.view.apps.AppsFragment
 import top.niunaijun.blackboxa.view.base.LoadingActivity
 import top.niunaijun.blackboxa.view.fake.FakeManagerActivity
@@ -59,15 +61,13 @@ class MainActivity : LoadingActivity() {
 
             setContentView(viewBinding.root)
             initToolbar(viewBinding.toolbarLayout.toolbar, R.string.app_name)
+            initSearchView()
             initViewPager()
             initFab()
             initToolbarSubTitle()
 
             
             checkStoragePermission()
-
-            
-            checkVpnPermission()
 
             try {
                 BlackBoxCore.get().onAfterMainActivityOnCreate(this)
@@ -202,36 +202,6 @@ class MainActivity : LoadingActivity() {
                 }
             }
 
-    
-    private fun checkVpnPermission() {
-        try {
-            val vpnIntent = VpnService.prepare(this)
-            if (vpnIntent != null) {
-                
-                Log.d(TAG, "VPN permission not granted, requesting...")
-                vpnPermissionResult.launch(vpnIntent)
-            } else {
-                
-                Log.d(TAG, "VPN permission already granted")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error checking VPN permission: ${e.message}")
-        }
-    }
-
-    private val vpnPermissionResult =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                try {
-                    if (result.resultCode == RESULT_OK) {
-                        Log.d(TAG, "VPN permission granted!")
-                        
-                    } else {
-                        Log.w(TAG, "VPN permission denied by user")
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error handling VPN permission result: ${e.message}")
-                }
-            }
 
     private fun showErrorDialog(message: String) {
         try {
@@ -243,6 +213,38 @@ class MainActivity : LoadingActivity() {
         } catch (e: Exception) {
             Log.e(TAG, "Error showing error dialog: ${e.message}")
             finish()
+        }
+    }
+
+    private fun initSearchView() {
+        try {
+            viewBinding.searchView.setOnQueryTextListener(object : com.ferfalk.simplesearchview.SimpleSearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String): Boolean {
+                    filterCurrentApps(query)
+                    return true
+                }
+
+                override fun onQueryTextChange(newText: String): Boolean {
+                    filterCurrentApps(newText)
+                    return true
+                }
+
+                override fun onQueryTextCleared(): Boolean {
+                    filterCurrentApps("")
+                    return true
+                }
+            })
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initializing search view: ${e.message}")
+        }
+    }
+
+    private fun filterCurrentApps(query: String) {
+        try {
+            val currentFrag = fragmentList.getOrNull(viewBinding.viewPager.currentItem)
+            currentFrag?.filterApps(query)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error filtering apps: ${e.message}")
         }
     }
 
@@ -389,9 +391,56 @@ class MainActivity : LoadingActivity() {
                 }
             }
 
+    private val backupSnapshotLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+        if (uri != null) {
+            showLoading()
+            top.niunaijun.blackbox.core.SnapshotManager.backupSnapshot(this, uri, object : top.niunaijun.blackbox.core.SnapshotManager.SnapshotCallback {
+                override fun onProgress(status: String?, current: Int, total: Int) {}
+                override fun onSuccess(message: String?) {
+                    runOnUiThread {
+                        hideLoading()
+                        toast(message ?: "Backup complete")
+                    }
+                }
+                override fun onError(error: Throwable?) {
+                    runOnUiThread {
+                        hideLoading()
+                        toast("Backup failed: ${error?.message}")
+                    }
+                }
+            })
+        }
+    }
+
+    private val restoreSnapshotLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            showLoading()
+            top.niunaijun.blackbox.core.SnapshotManager.restoreSnapshot(this, uri, object : top.niunaijun.blackbox.core.SnapshotManager.SnapshotCallback {
+                override fun onProgress(status: String?, current: Int, total: Int) {}
+                override fun onSuccess(message: String?) {
+                    runOnUiThread {
+                        hideLoading()
+                        toast(message ?: "Restore complete")
+                        scanUser()
+                    }
+                }
+                override fun onError(error: Throwable?) {
+                    runOnUiThread {
+                        hideLoading()
+                        toast("Restore failed: ${error?.message}")
+                    }
+                }
+            })
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         try {
             menuInflater.inflate(R.menu.menu_main, menu)
+            val item = menu?.findItem(R.id.action_search)
+            if (item != null) {
+                viewBinding.searchView.setMenuItem(item)
+            }
             return true
         } catch (e: Exception) {
             Log.e(TAG, "Error creating options menu: ${e.message}")
@@ -402,23 +451,19 @@ class MainActivity : LoadingActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         try {
             when (item.itemId) {
-                R.id.main_git -> {
-                    val intent =
-                            Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://github.com/ALEX5402/NewBlackbox")
-                            )
-                    startActivity(intent)
-                }
                 R.id.main_setting -> {
                     SettingActivity.start(this)
                 }
-                R.id.main_tg -> {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/newblackboxa"))
-                    startActivity(intent)
+                R.id.main_file_transfer -> {
+                    startActivity(Intent(this, top.niunaijun.blackboxa.view.transfer.FileTransferActivity::class.java))
+                }
+                R.id.main_hidden_apps -> {
+                    showHiddenAppsDialog()
+                }
+                R.id.main_backup_restore -> {
+                    showBackupRestoreDialog()
                 }
                 R.id.fake_location -> {
-                    
                     val intent = Intent(this, FakeManagerActivity::class.java)
                     intent.putExtra("userID", 0)
                     startActivity(intent)
@@ -429,6 +474,53 @@ class MainActivity : LoadingActivity() {
         } catch (e: Exception) {
             Log.e(TAG, "Error handling menu item selection: ${e.message}")
             return false
+        }
+    }
+
+    private fun showBackupRestoreDialog() {
+        MaterialDialog(this).show {
+            title(text = "Virtualbox Snapshot")
+            listItems(items = listOf("Backup Full Snapshot to ZIP", "Restore Full Snapshot from ZIP")) { _, index, _ ->
+                if (index == 0) {
+                    backupSnapshotLauncher.launch("SarkVirtualbox_Snapshot_${System.currentTimeMillis()}.zip")
+                } else {
+                    restoreSnapshotLauncher.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
+                }
+            }
+        }
+    }
+
+    private fun showHiddenAppsDialog() {
+        val hiddenPkgs = top.niunaijun.blackboxa.util.HiddenAppsManager.getHiddenApps(this, currentUser).toList()
+        if (hiddenPkgs.isEmpty()) {
+            MaterialDialog(this).show {
+                title(text = "Hidden Apps")
+                message(text = "No hidden apps for User $currentUser.")
+                positiveButton(text = "OK")
+            }
+            return
+        }
+
+        MaterialDialog(this).show {
+            title(text = "Hidden Apps (User $currentUser)")
+            listItems(items = hiddenPkgs) { _, _, text ->
+                val pkg = text.toString()
+                MaterialDialog(this@MainActivity).show {
+                    title(text = pkg)
+                    listItems(items = listOf("Launch App", "Unhide App")) { _, choice, _ ->
+                        if (choice == 0) {
+                            showLoading()
+                            BlackBoxCore.get().launchApk(pkg, currentUser)
+                            hideLoading()
+                        } else {
+                            top.niunaijun.blackboxa.util.HiddenAppsManager.unhideApp(this@MainActivity, currentUser, pkg)
+                            filterCurrentApps("")
+                            toast("$pkg is now visible")
+                        }
+                    }
+                }
+            }
+            positiveButton(text = "Close")
         }
     }
 }

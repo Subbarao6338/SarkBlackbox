@@ -467,9 +467,12 @@ public class IConnectivityManagerProxy extends BinderInvocationStub {
     public static class GetPrivateDnsServerName extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            
-            Slog.d(TAG, "Disabling private DNS for sandboxed app");
-            return null;
+            String serverName = top.niunaijun.blackbox.core.DnsConfigManager.getPrivateDnsServerName();
+            if (serverName != null) {
+                Slog.d(TAG, "Returning Private DNS server name: " + serverName);
+                return serverName;
+            }
+            return method.invoke(who, args);
         }
     }
 
@@ -478,9 +481,11 @@ public class IConnectivityManagerProxy extends BinderInvocationStub {
     public static class IsPrivateDnsActive extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            
-            Slog.d(TAG, "Private DNS disabled for sandboxed app");
-            return false;
+            if (top.niunaijun.blackbox.core.DnsConfigManager.isPrivateDnsActive()) {
+                Slog.d(TAG, "Private DNS is active for sandboxed app");
+                return true;
+            }
+            return method.invoke(who, args);
         }
     }
 
@@ -490,16 +495,15 @@ public class IConnectivityManagerProxy extends BinderInvocationStub {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             try {
-                
-                java.util.List<java.net.InetAddress> dnsServers = new java.util.ArrayList<>();
-                dnsServers.add(java.net.InetAddress.getByName("8.8.8.8"));
-                dnsServers.add(java.net.InetAddress.getByName("8.8.4.4"));
-                Slog.d(TAG, "Returning system DNS servers for sandboxed app");
-                return dnsServers;
+                java.util.List<java.net.InetAddress> activeDns = top.niunaijun.blackbox.core.DnsConfigManager.getActiveDnsServers();
+                if (!activeDns.isEmpty()) {
+                    Slog.d(TAG, "Returning configured Private DNS servers: " + activeDns);
+                    return activeDns;
+                }
             } catch (Exception e) {
-                Slog.w(TAG, "Error creating DNS servers list: " + e.getMessage());
-                return method.invoke(who, args);
+                Slog.w(TAG, "Error getting active DNS servers: " + e.getMessage());
             }
+            return method.invoke(who, args);
         }
     }
 

@@ -69,7 +69,10 @@ public class IDnsResolverProxy extends BinderInvocationStub {
         
         private Object createFallbackDnsResult() {
             try {
-                
+                List<InetAddress> activeDns = top.niunaijun.blackbox.core.DnsConfigManager.getActiveDnsServers();
+                if (!activeDns.isEmpty()) {
+                    return activeDns;
+                }
                 List<InetAddress> fallbackServers = new ArrayList<>();
                 fallbackServers.add(InetAddress.getByName("8.8.8.8"));
                 fallbackServers.add(InetAddress.getByName("8.8.4.4"));

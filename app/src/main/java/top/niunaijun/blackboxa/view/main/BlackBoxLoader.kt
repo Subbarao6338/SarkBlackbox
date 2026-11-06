@@ -306,8 +306,17 @@ class BlackBoxLoader {
             try {
                 BlackBoxCore.get().addServiceAvailableCallback {
                     Log.d(TAG, "Services became available, triggering app list refresh")
-                    
-                    
+                    try {
+                        if (BlackBoxCore.get().isSupportGms) {
+                            for (user in BlackBoxCore.get().users) {
+                                if (!BlackBoxCore.get().isInstalled(top.niunaijun.blackbox.core.GmsCore.GMS_PKG, user.id)) {
+                                    BlackBoxCore.get().installGms(user.id)
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error auto-initializing GMS: ${e.message}")
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error registering service available callback: ${e.message}")
