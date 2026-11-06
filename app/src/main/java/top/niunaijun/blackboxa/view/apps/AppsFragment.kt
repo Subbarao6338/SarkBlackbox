@@ -40,6 +40,8 @@ class AppsFragment : Fragment() {
     private lateinit var viewModel: AppsViewModel
 
     private lateinit var mAdapter: RVAdapter<AppInfo>
+    private var allApps: List<AppInfo> = emptyList()
+    private var currentFilterQuery: String = ""
 
     private val viewBinding: FragmentAppsBinding by inflate()
 
@@ -356,6 +358,24 @@ class AppsFragment : Fragment() {
                                         stopApk(data)
                                     }
 
+                                    R.id.app_info -> {
+                                        showAppInfo(data)
+                                    }
+
+                                    R.id.app_hide -> {
+                                        top.niunaijun.blackboxa.util.HiddenAppsManager.hideApp(requireContext(), userID, data.packageName)
+                                        filterApps(currentFilterQuery)
+                                        toast("${data.name} hidden")
+                                    }
+
+                                    R.id.app_clear_cache -> {
+                                        clearAppCache(data)
+                                    }
+
+                                    R.id.app_export_apk -> {
+                                        exportApk(data)
+                                    }
+
                                     R.id.app_shortcut -> {
                                         ShortcutUtil.createShortcut(requireContext(), userID, data)
                                     }
@@ -376,6 +396,123 @@ class AppsFragment : Fragment() {
             Log.e(TAG, "Error in setOnLongClick: ${e.message}")
         }
     }
+
+    private fun showAppInfo(data: AppInfo) {
+        try {
+            val pm = requireContext().packageManager
+            var version = "Unknown"
+            var targetSdk = "Unknown"
+            var uid = "Unknown"
+
+            try {
+                val pInfo = pm.getPackageArchiveInfo(data.sourceDir, 0)
+                if (pInfo != null) {
+                    version = "${pInfo.versionName ?: "1.0"} (${pInfo.versionCode})"
+                    targetSdk = pInfo.applicationInfo?.targetSdkVersion?.toString() ?: "Unknown"
+                }
+            } catch (ignored: Exception) {}
+
+            try {
+                val bApp = BlackBoxCore.get().getInstalledApplications(0, userID).find { it.packageName == data.packageName }
+                if (bApp != null) {
+                    uid = bApp.uid.toString()
+                }
+            } catch (ignored: Exception) {}
+
+            val dataDir = top.niunaijun.blackbox.core.env.BEnvironment.getDataDir(data.packageName, userID).absolutePath
+
+            val infoText = StringBuilder()
+                .append("Application: ").append(data.name).append("\n\n")
+                .append("Package Name: ").append(data.packageName).append("\n\n")
+                .append("Version: ").append(version).append("\n\n")
+                .append("Target SDK: ").append(targetSdk).append("\n\n")
+                .append("Virtual UID: ").append(uid).append("\n\n")
+                .append("Source Path: \n").append(data.sourceDir).append("\n\n")
+                .append("Data Path: \n").append(dataDir)
+                .toString()
+
+            MaterialDialog(requireContext()).show {
+                title(text = "App Inspector")
+                message(text = infoText)
+                positiveButton(text = "Close")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing app info: ${e.message}")
+        }
+    }
+
+    private fun clearAppCache(data: AppInfo) {
+        try {
+            MaterialDialog(requireContext()).show {
+                title(text = "Clear Cache")
+                message(text = "Clear cache for ${data.name}? User accounts and app data will remain untouched.")
+                positiveButton(R.string.done) {
+                    try {
+                        val cacheDir = top.niunaijun.blackbox.core.env.BEnvironment.getDataCacheDir(data.packageName, userID)
+                        val extCacheDir = top.niunaijun.blackbox.core.env.BEnvironment.getExternalDataCacheDir(data.packageName, userID)
+                        top.niunaijun.blackbox.utils.FileUtils.deleteDir(cacheDir)
+                        if (extCacheDir != null) {
+                            top.niunaijun.blackbox.utils.FileUtils.deleteDir(extCacheDir)
+                        }
+                        top.niunaijun.blackbox.utils.FileUtils.mkdirs(cacheDir)
+                        toast("Cache cleared for ${data.name}")
+                    } catch (e: Exception) {
+                        toast("Failed to clear cache: ${e.message}")
+                    }
+                }
+                negativeButton(R.string.cancel)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error clearing cache: ${e.message}")
+        }
+    }
+
+    private var pendingExportApp: AppInfo? = null
+    private val exportApkLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/vnd.android.package-archive")) { uri ->
+        if (uri != null && pendingExportApp != null) {
+            val app = pendingExportApp!!
+            try {
+                requireContext().contentResolver.openOutputStream(uri)?.use { out ->
+                    java.io.FileInputStream(java.io.File(app.sourceDir)).use { input ->
+                        input.copyTo(out)
+                    }
+                }
+                toast("Exported ${app.name} APK successfully")
+            } catch (e: Exception) {
+                toast("Export failed: ${e.message}")
+            }
+        }
+    }
+
+    private fun exportApk(data: AppInfo) {
+        val srcFile = java.io.File(data.sourceDir)
+        if (!srcFile.exists()) {
+            toast("Source APK not found")
+            return
+        }
+        pendingExportApp = data
+        val safeName = data.name.replace("[^a-zA-Z0-9.-]".toRegex(), "_")
+        exportApkLauncher.launch("${safeName}_${data.packageName}.apk")
+    }
+
+    fun filterApps(query: String) {
+        currentFilterQuery = query
+        val hiddenSet = top.niunaijun.blackboxa.util.HiddenAppsManager.getHiddenApps(requireContext(), userID)
+        val visibleApps = allApps.filter { !hiddenSet.contains(it.packageName) }
+        val filtered = if (query.isEmpty()) {
+            visibleApps
+        } else {
+            visibleApps.filter {
+                it.name.contains(query, ignoreCase = true) || it.packageName.contains(query, ignoreCase = true)
+            }
+        }
+        mAdapter.setItems(filtered)
+        if (filtered.isEmpty()) {
+            viewBinding.stateView.showEmpty()
+        } else {
+            viewBinding.stateView.showContent()
+        }
+    }
     
     private fun initData() {
         try {
@@ -384,12 +521,8 @@ class AppsFragment : Fragment() {
             viewModel.appsLiveData.observe(viewLifecycleOwner) {
                 try {
                     if (it != null) {
-                        mAdapter.setItems(it)
-                        if (it.isEmpty()) {
-                            viewBinding.stateView.showEmpty()
-                        } else {
-                            viewBinding.stateView.showContent()
-                        }
+                        allApps = it
+                        filterApps(currentFilterQuery)
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error observing apps data: ${e.message}")

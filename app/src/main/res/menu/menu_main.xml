@@ -2,11 +2,26 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <item
+        android:id="@+id/action_search"
+        android:icon="@drawable/ic_search"
+        android:title="@string/filter"
+        app:showAsAction="ifRoom" />
 
     <item
-            android:id="@+id/main_setting"
-            android:title="@string/setting"
-            app:showAsAction="never" />
+        android:id="@+id/main_file_transfer"
+        android:title="File Transfer"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/main_hidden_apps"
+        android:title="Hidden Apps"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/main_backup_restore"
+        android:title="Backup &amp; Restore"
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/fake_location"
@@ -14,12 +29,8 @@
         app:showAsAction="never" />
 
     <item
-            android:id="@+id/main_git"
-            android:title="@string/open_source_path"
-            app:showAsAction="never" />
+        android:id="@+id/main_setting"
+        android:title="@string/setting"
+        app:showAsAction="never" />
 
-    <item
-            android:id="@+id/main_tg"
-            android:title="@string/tg_group"
-            app:showAsAction="never" />
 </menu>

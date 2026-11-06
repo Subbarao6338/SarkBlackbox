@@ -4,12 +4,23 @@ plugins {
 }
 
 android {
-
     namespace 'top.niunaijun.blackboxa'
     compileSdk rootProject.ext.compileSdkVersion
     ndkVersion = "29.0.13846066"
+
+    signingConfigs {
+        release {
+            storeFile file("sark.keystore")
+            storePassword "sarkvbox"
+            keyAlias "sark"
+            keyPassword "sarkvbox"
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
+
     defaultConfig {
-        applicationId "top.niunaijun.blackbox"
+        applicationId "sark.vbox"
         minSdk rootProject.ext.minSdk
         targetSdk rootProject.ext.targetSdkVersion
         versionCode rootProject.ext.versionCode
@@ -17,21 +28,22 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        splits {
-            abi {
-                enable true
-                reset()
-                
-                include 'armeabi-v7a', "arm64-v8a"
-                universalApk true
-            }
+        resourceConfigurations += ['en']
+
+        ndk {
+            abiFilters 'arm64-v8a'
         }
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.release
+            matchingFallbacks = ['release']
+        }
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -48,14 +60,33 @@ android {
     packaging {
         jniLibs {
             excludes.add("**/libandroidx.graphics.path.so")
+            excludes.add("lib/armeabi/**")
+            excludes.add("lib/armeabi-v7a/**")
+            excludes.add("lib/x86/**")
+            excludes.add("lib/x86_64/**")
+            excludes.add("lib/mips/**")
+            excludes.add("lib/mips64/**")
+            excludes.add("lib/riscv64/**")
         }
         resources {
             excludes.add("**/libandroidx.graphics.path.so")
+            excludes.add("META-INF/*.version")
+            excludes.add("META-INF/*.kotlin_module")
+            excludes.add("META-INF/DEPENDENCIES")
+            excludes.add("META-INF/LICENSE")
+            excludes.add("META-INF/LICENSE.txt")
+            excludes.add("META-INF/license.txt")
+            excludes.add("META-INF/NOTICE")
+            excludes.add("META-INF/NOTICE.txt")
+            excludes.add("META-INF/notice.txt")
+            excludes.add("META-INF/ASL2.0")
+            excludes.add("META-INF/AL2.0")
+            excludes.add("META-INF/LGPL2.1")
         }
     }
     applicationVariants.configureEach { variant ->
         variant.outputs.configureEach { output ->
-            output.outputFileName = "BlackBox_${variant.versionName}_${output.baseName}.apk"
+            output.outputFileName = "SarkVirtualbox_${variant.versionName}_${variant.name}.apk"
         }
     }
 }
@@ -78,15 +109,10 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.3.1"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1"
 
-    
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'com.gitee.cbfg5210:RVAdapter:0.3.7'
 
-    
     implementation 'com.github.Othershe:CornerLabelView:1.0.0'
-    
-//    implementation 'com.github.nukc.stateview:kotlin:2.2.0'
-    
     implementation 'com.github.Ferfalk:SimpleSearchView:0.2.0'
     implementation 'com.tbuonomo:dotsindicator:4.2'
     
@@ -95,11 +121,5 @@ dependencies {
     implementation 'com.afollestad.material-dialogs:core:3.3.0'
     implementation 'com.afollestad.material-dialogs:input:3.3.0'
 
-
-
-
-
-    
     implementation 'androidx.work:work-runtime:2.7.1'
-
 }

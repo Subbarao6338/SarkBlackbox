@@ -100,6 +100,13 @@ public class BUserManagerService extends IBUserManagerService.Stub implements IS
         synchronized (mUsers) {
             saveUserInfoLocked();
         }
+        try {
+            if (top.niunaijun.blackbox.core.GmsCore.isSupportGms() && !top.niunaijun.blackbox.core.GmsCore.isInstalledGoogleService(userId)) {
+                top.niunaijun.blackbox.core.GmsCore.installGApps(userId);
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
         return bUserInfo;
     }
 

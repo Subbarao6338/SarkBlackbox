@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Isometric 3D Virtual Cube / Box with Vibrant Colors -->
+    <!-- Top Face (Vibrant Cyan / Teal) -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M54,22 L82,38 L54,54 L26,38 Z" />
+    <!-- Left Face (Deep Indigo / Purple) -->
+    <path
+        android:fillColor="#651FFF"
+        android:pathData="M26,38 L54,54 L54,86 L26,70 Z" />
+    <!-- Right Face (Vibrant Pink / Magenta) -->
+    <path
+        android:fillColor="#F50057"
+        android:pathData="M54,54 L82,38 L82,70 L54,86 Z" />
+    <!-- Inner S shape or core glow (Amber / Golden Glow) -->
+    <path
+        android:fillColor="#FFD600"
+        android:pathData="M54,34 L66,41 L54,48 L42,41 Z" />
+</vector>

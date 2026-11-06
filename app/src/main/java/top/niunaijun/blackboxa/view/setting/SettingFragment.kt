@@ -31,20 +31,39 @@ class SettingFragment : PreferenceFragmentCompat() {
         }
 
         invalidHideState {
-            val vpnPreference: Preference = (findPreference("use_vpn_network")!!)
-            val mUseVpnNetwork = AppManager.mBlackBoxLoader.useVpnNetwork()
-            vpnPreference.setDefaultValue(mUseVpnNetwork)
-            vpnPreference
-        }
-
-        invalidHideState {
             val disableFlagSecurePreference: Preference = (findPreference("disable_flag_secure")!!)
             val mDisableFlagSecure = AppManager.mBlackBoxLoader.disableFlagSecure()
             disableFlagSecurePreference.setDefaultValue(mDisableFlagSecure)
             disableFlagSecurePreference
         }
 
+        initDnsPreferences()
+
         initSendLogs()
+    }
+
+    private fun initDnsPreferences() {
+        val dnsModePref: androidx.preference.ListPreference? = findPreference("private_dns_mode")
+        val customDnsPref: androidx.preference.EditTextPreference? = findPreference("private_dns_custom")
+
+        dnsModePref?.value = top.niunaijun.blackbox.core.DnsConfigManager.getDnsMode()
+        customDnsPref?.text = top.niunaijun.blackbox.core.DnsConfigManager.getCustomDns()
+        customDnsPref?.isVisible = (dnsModePref?.value == "custom")
+
+        dnsModePref?.setOnPreferenceChangeListener { _, newValue ->
+            val mode = newValue as String
+            top.niunaijun.blackbox.core.DnsConfigManager.setDnsMode(mode)
+            customDnsPref?.isVisible = (mode == "custom")
+            toast("Private DNS updated: $mode")
+            true
+        }
+
+        customDnsPref?.setOnPreferenceChangeListener { _, newValue ->
+            val custom = (newValue as? String) ?: ""
+            top.niunaijun.blackbox.core.DnsConfigManager.setCustomDns(custom)
+            toast("Custom DNS updated: $custom")
+            true
+        }
     }
 
     private fun initGms() {
@@ -73,9 +92,6 @@ class SettingFragment : PreferenceFragmentCompat() {
                 }
                 "daemon_enable" -> {
                     AppManager.mBlackBoxLoader.invalidDaemonEnable(tmpHide)
-                }
-                "use_vpn_network" -> {
-                    AppManager.mBlackBoxLoader.invalidUseVpnNetwork(tmpHide)
                 }
                 "disable_flag_secure" -> {
                     AppManager.mBlackBoxLoader.invalidDisableFlagSecure(tmpHide)

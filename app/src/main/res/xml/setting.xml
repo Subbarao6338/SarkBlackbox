@@ -15,16 +15,26 @@
 
         <SwitchPreferenceCompat
                 app:key="root_hide"
-                app:title="@string/hide_root" />
+                app:title="@string/hide_root"
+                android:defaultValue="false" />
 
         <SwitchPreferenceCompat
                 app:key="daemon_enable"
                 app:title="@string/daemon_enable" />
 
-        <SwitchPreferenceCompat
-                app:key="use_vpn_network"
-                app:title="@string/use_vpn_network"
-                app:summary="@string/use_vpn_network_summary" />
+        <ListPreference
+                app:key="private_dns_mode"
+                app:title="Private DNS"
+                app:summary="%s"
+                android:entries="@array/dns_mode_entries"
+                android:entryValues="@array/dns_mode_values"
+                android:defaultValue="system" />
+
+        <EditTextPreference
+                app:key="private_dns_custom"
+                app:title="Custom DNS Server / Hostname"
+                app:summary="%s"
+                app:useSimpleSummaryProvider="true" />
 
         <SwitchPreferenceCompat
                 app:key="disable_flag_secure"
