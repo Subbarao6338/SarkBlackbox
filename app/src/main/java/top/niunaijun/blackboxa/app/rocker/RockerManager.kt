@@ -179,19 +179,23 @@ object RockerManager {
     fun checkPermissions(context: Context): Boolean {
         return try {
             
-            val hasOverlayPermission = android.provider.Settings.canDrawOverlays(context)
-            if (!hasOverlayPermission) {
-                Log.w(
-                        TAG,
-                        "Overlay permission not granted - RockerManager cannot show floating view"
-                )
-                return false
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                val hasOverlayPermission = android.provider.Settings.canDrawOverlays(context)
+                if (!hasOverlayPermission) {
+                    Log.w(
+                            TAG,
+                            "Overlay permission not granted - RockerManager cannot show floating view"
+                    )
+                    return false
+                }
             }
 
             
             val hasLocationPermission =
-                    context.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) ==
-                            android.content.pm.PackageManager.PERMISSION_GRANTED
+                    androidx.core.content.ContextCompat.checkSelfPermission(
+                            context,
+                            android.Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
             if (!hasLocationPermission) {
                 Log.w(TAG, "Location permission not granted - RockerManager cannot access location")
                 return false

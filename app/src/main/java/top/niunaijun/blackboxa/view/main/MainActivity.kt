@@ -364,8 +364,8 @@ class MainActivity : LoadingActivity() {
 
             if (fragmentList.size == userList.size) {
                 fragmentList.add(AppsFragment.newInstance(fragmentList.size))
-            } else if (fragmentList.size > userList.size + 1) {
-                fragmentList.removeLast()
+            } else if (fragmentList.size > userList.size + 1 && fragmentList.isNotEmpty()) {
+                fragmentList.removeAt(fragmentList.lastIndex)
             }
 
             mViewPagerAdapter.notifyDataSetChanged()

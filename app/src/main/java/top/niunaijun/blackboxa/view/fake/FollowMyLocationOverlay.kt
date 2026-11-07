@@ -85,6 +85,7 @@ class FollowMyLocationOverlay : AppCompatActivity() {
 
     override fun onBackPressed() {
         finishWithResult(startPoint)
+        super.onBackPressed()
     }
 
     override fun onResume() {
@@ -110,6 +111,7 @@ class FollowMyLocationOverlay : AppCompatActivity() {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         val permissionsToRequest = ArrayList<String>()
         var i = 0
         while (i < grantResults.size) {
