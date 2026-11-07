@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <!-- Center container rounded square -->
+    <path
+        android:fillColor="#1E1E2E"
+        android:pathData="M30,12 H90 A18,18 0 0 1 108,30 V90 A18,18 0 0 1 90,108 H30 A18,18 0 0 1 12,90 V30 A18,18 0 0 1 30,12 Z" />
+
+    <!-- Isometric 3D Virtual Cube / Box with Vibrant Material Palette -->
+    <!-- Top Face (Vibrant Cyan / Teal) -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M60,34 L88,50 L60,66 L32,50 Z" />
+    <!-- Left Face (Deep Indigo / Violet) -->
+    <path
+        android:fillColor="#651FFF"
+        android:pathData="M32,50 L60,66 L60,98 L32,82 Z" />
+    <!-- Right Face (Vibrant Pink / Magenta) -->
+    <path
+        android:fillColor="#F50057"
+        android:pathData="M60,66 L88,50 L88,82 L60,98 Z" />
+    <!-- Inner Glowing Core Cube (Amber) -->
+    <path
+        android:fillColor="#FFD600"
+        android:pathData="M60,46 L72,53 L60,60 L48,53 Z" />
+</vector>
