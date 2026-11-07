@@ -283,11 +283,26 @@ class MainActivity : LoadingActivity() {
 
     private fun initViewPager() {
         try {
-            val userList = BlackBoxCore.get().users
-            userList.forEach { fragmentList.add(AppsFragment.newInstance(it.id)) }
+            var userList = BlackBoxCore.get().users
+            if (userList.isEmpty()) {
+                try {
+                    val defaultUser = BlackBoxCore.get().createUser(0)
+                    if (defaultUser != null) {
+                        userList = BlackBoxCore.get().users
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error ensuring user 0: ${e.message}")
+                }
+            }
+
+            if (userList.isEmpty()) {
+                fragmentList.add(AppsFragment.newInstance(0))
+            } else {
+                userList.forEach { fragmentList.add(AppsFragment.newInstance(it.id)) }
+            }
 
             currentUser = userList.firstOrNull()?.id ?: 0
-            fragmentList.add(AppsFragment.newInstance(userList.size))
+            fragmentList.add(AppsFragment.newInstance(fragmentList.size))
 
             mViewPagerAdapter = ViewPagerAdapter(this)
             mViewPagerAdapter.replaceData(fragmentList)

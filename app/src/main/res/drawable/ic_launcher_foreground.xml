@@ -3,21 +3,29 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Isometric 3D Virtual Cube / Box with Vibrant Colors -->
-    <!-- Top Face (Vibrant Cyan / Teal) -->
+    <!-- Material 3 Isometric Virtualbox Container & Isometric Cube within safe zone (center 66dp of 108dp) -->
+    <!-- Top Face (Vibrant Cyan / Teal #00E5FF) -->
     <path
         android:fillColor="#00E5FF"
-        android:pathData="M54,22 L82,38 L54,54 L26,38 Z" />
-    <!-- Left Face (Deep Indigo / Purple) -->
+        android:pathData="M54,30 L80,45 L54,60 L28,45 Z" />
+    <!-- Left Face (Material Deep Violet #6200EA) -->
     <path
-        android:fillColor="#651FFF"
-        android:pathData="M26,38 L54,54 L54,86 L26,70 Z" />
-    <!-- Right Face (Vibrant Pink / Magenta) -->
+        android:fillColor="#6200EA"
+        android:pathData="M28,45 L54,60 L54,88 L28,73 Z" />
+    <!-- Right Face (Material Neon Magenta #F50057) -->
     <path
         android:fillColor="#F50057"
-        android:pathData="M54,54 L82,38 L82,70 L54,86 Z" />
-    <!-- Inner S shape or core glow (Amber / Golden Glow) -->
+        android:pathData="M54,60 L80,45 L80,73 L54,88 Z" />
+    <!-- Inner Floating Sandbox Core - Top Face (Vibrant Amber / Gold #FFD600) -->
     <path
         android:fillColor="#FFD600"
-        android:pathData="M54,34 L66,41 L54,48 L42,41 Z" />
+        android:pathData="M54,41 L65,47.5 L54,54 L43,47.5 Z" />
+    <!-- Inner Floating Core - Left Face (Orange #FF6D00) -->
+    <path
+        android:fillColor="#FF6D00"
+        android:pathData="M43,47.5 L54,54 L54,64 L43,57.5 Z" />
+    <!-- Inner Floating Core - Right Face (Coral #FFAB00) -->
+    <path
+        android:fillColor="#FFAB00"
+        android:pathData="M54,54 L65,47.5 L65,57.5 L54,64 Z" />
 </vector>
