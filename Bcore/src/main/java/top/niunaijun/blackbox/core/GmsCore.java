@@ -18,13 +18,20 @@ public class GmsCore {
     public static final String GSF_PKG = "com.google.android.gsf";
     public static final String VENDING_PKG = "com.android.vending";
 
+    // MicroG package constants
+    public static final String MICROG_GMS_PKG = "org.microg.gms.core";
+    public static final String MICROG_GSF_PKG = "com.google.android.gsf";
+    public static final String MICROG_STORE_PKG = "com.android.vending";
+    public static final String MICROG_SERVICES_PKG = "org.microg.android.gms";
+
     static {
         GOOGLE_APP.add(VENDING_PKG);
         GOOGLE_APP.add("com.google.android.play.games");
         GOOGLE_APP.add("com.google.android.wearable.app");
         GOOGLE_APP.add("com.google.android.wearable.app.cn");
+        GOOGLE_APP.add("com.google.android.apps.authenticator2");
 
-        
+        // Standard Google Services
         GOOGLE_SERVICE.add(GMS_PKG);
         GOOGLE_SERVICE.add(GSF_PKG);
         GOOGLE_SERVICE.add("com.google.android.gsf.login");
@@ -37,6 +44,12 @@ public class GmsCore {
         GOOGLE_SERVICE.add("com.google.android.partnersetup");
         GOOGLE_SERVICE.add("com.google.android.setupwizard");
         GOOGLE_SERVICE.add("com.google.android.syncadapters.calendar");
+
+        // MicroG Services & Components
+        GOOGLE_SERVICE.add(MICROG_GMS_PKG);
+        GOOGLE_SERVICE.add(MICROG_SERVICES_PKG);
+        GOOGLE_SERVICE.add("org.microg.gms");
+        GOOGLE_SERVICE.add("app.revanced.android.gms");
     }
 
     public static boolean isGoogleService(String packageName) {
@@ -105,10 +118,16 @@ public class GmsCore {
             return true;
         } catch (PackageManager.NameNotFoundException ignored) {
         }
+        try {
+            BlackBoxCore.getPackageManager().getPackageInfo(MICROG_GMS_PKG, 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException ignored) {
+        }
         return false;
     }
 
     public static boolean isInstalledGoogleService(int userId) {
-        return BlackBoxCore.get().isInstalled(GMS_PKG, userId);
+        return BlackBoxCore.get().isInstalled(GMS_PKG, userId)
+                || BlackBoxCore.get().isInstalled(MICROG_GMS_PKG, userId);
     }
 }

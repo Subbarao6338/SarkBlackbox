@@ -98,14 +98,7 @@ public class GmsProxy extends BinderInvocationStub {
     public static class Authenticate extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            try {
-                Slog.d(TAG, "GmsProxy: Handling authenticate call");
-                return method.invoke(who, args);
-            } catch (Exception e) {
-                Slog.w(TAG, "GmsProxy: Authentication error, returning success", e);
-                
-                return createMockAuthResult();
-            }
+            return method.invoke(who, args);
         }
     }
 
@@ -114,13 +107,7 @@ public class GmsProxy extends BinderInvocationStub {
     public static class GetAccount extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            try {
-                Slog.d(TAG, "GmsProxy: Handling getAccount call");
-                return method.invoke(who, args);
-            } catch (Exception e) {
-                Slog.w(TAG, "GmsProxy: GetAccount error, returning null", e);
-                return null;
-            }
+            return method.invoke(who, args);
         }
     }
 
@@ -129,13 +116,7 @@ public class GmsProxy extends BinderInvocationStub {
     public static class GetToken extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            try {
-                Slog.d(TAG, "GmsProxy: Handling getToken call");
-                return method.invoke(who, args);
-            } catch (Exception e) {
-                Slog.w(TAG, "GmsProxy: GetToken error, returning mock token", e);
-                return "mock_gms_token_" + System.currentTimeMillis();
-            }
+            return method.invoke(who, args);
         }
     }
 
@@ -144,13 +125,7 @@ public class GmsProxy extends BinderInvocationStub {
     public static class InvalidateToken extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            try {
-                Slog.d(TAG, "GmsProxy: Handling invalidateToken call");
-                return method.invoke(who, args);
-            } catch (Exception e) {
-                Slog.w(TAG, "GmsProxy: InvalidateToken error, ignoring", e);
-                return null;
-            }
+            return method.invoke(who, args);
         }
     }
 
@@ -159,25 +134,7 @@ public class GmsProxy extends BinderInvocationStub {
     public static class ClearToken extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            try {
-                Slog.d(TAG, "GmsProxy: Handling clearToken call");
-                return method.invoke(who, args);
-            } catch (Exception e) {
-                Slog.w(TAG, "GmsProxy: ClearToken error, ignoring", e);
-                return null;
-            }
-        }
-    }
-
-    
-    private static Object createMockAuthResult() {
-        try {
-            
-            Class<?> bundleClass = Class.forName("android.os.Bundle");
-            return bundleClass.newInstance();
-        } catch (Exception e) {
-            Slog.w(TAG, "Failed to create mock auth result", e);
-            return null;
+            return method.invoke(who, args);
         }
     }
 }
