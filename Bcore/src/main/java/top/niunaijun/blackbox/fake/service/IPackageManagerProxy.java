@@ -133,26 +133,18 @@ public class IPackageManagerProxy extends BinderInvocationStub {
             String packageName = (String) args[0];
             int flags = MethodParameterUtils.toInt(args[1]);
             
-            
-            if ("com.android.vending".equals(packageName)) {
-                return createFakeGooglePlayServicesPackageInfo();
-            }
-            
             PackageInfo packageInfo = BlackBoxCore.getBPackageManager().getPackageInfo(packageName, flags, BlackBoxCore.getUserId());
             if (packageInfo != null) {
-                
                 if (packageInfo.requestedPermissions != null && packageInfo.requestedPermissionsFlags != null) {
                     for (int i = 0; i < packageInfo.requestedPermissions.length; i++) {
-                        String perm = packageInfo.requestedPermissions[i];
-                        if (perm != null && (perm.equals(android.Manifest.permission.RECORD_AUDIO)
-                                || perm.equals("android.permission.FOREGROUND_SERVICE_MICROPHONE")
-                                || perm.equals(android.Manifest.permission.MODIFY_AUDIO_SETTINGS)
-                                || perm.equals(android.Manifest.permission.CAPTURE_AUDIO_OUTPUT))) {
-                            packageInfo.requestedPermissionsFlags[i] |= PackageInfo.REQUESTED_PERMISSION_GRANTED;
-                        }
+                        packageInfo.requestedPermissionsFlags[i] |= PackageInfo.REQUESTED_PERMISSION_GRANTED;
                     }
                 }
                 return packageInfo;
+            }
+
+            if ("com.android.vending".equals(packageName)) {
+                return createFakeGooglePlayServicesPackageInfo();
             }
             if (AppSystemEnv.isOpenPackage(packageName)) {
                 return method.invoke(who, args);
@@ -414,27 +406,28 @@ public class IPackageManagerProxy extends BinderInvocationStub {
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             String permission = (String) args[0];
             String packageName = (String) args[1];
-            
+
+            if (packageName != null && (BlackBoxCore.get().isInstalled(packageName, BlackBoxCore.getUserId())
+                    || packageName.equals(BActivityThread.getAppPackageName()))) {
+                return PackageManager.PERMISSION_GRANTED;
+            }
             
             if (isAudioPermission(permission)) {
                 Slog.d(TAG, "SimpleAudioPermissionHook: Granting audio permission: " + permission + " to " + packageName);
                 return PackageManager.PERMISSION_GRANTED;
             }
 
-            
             if (isStorageOrMediaPermission(permission)) {
                 Slog.d(TAG, "SimpleAudioPermissionHook: Granting storage/media permission: " + permission + " to " + packageName);
                 return PackageManager.PERMISSION_GRANTED;
             }
-            
             
             if (isNotificationOrXiaomiPermission(permission)) {
                 Slog.d(TAG, "SimpleAudioPermissionHook: Granting notification/Xiaomi permission: " + permission + " to " + packageName);
                 return PackageManager.PERMISSION_GRANTED;
             }
             
-            
-            return method.invoke(who, args);
+            return PackageManager.PERMISSION_GRANTED;
         }
     }
 
@@ -444,27 +437,28 @@ public class IPackageManagerProxy extends BinderInvocationStub {
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             String permission = (String) args[0];
             String packageName = (String) args[1];
-            
+
+            if (packageName != null && (BlackBoxCore.get().isInstalled(packageName, BlackBoxCore.getUserId())
+                    || packageName.equals(BActivityThread.getAppPackageName()))) {
+                return PackageManager.PERMISSION_GRANTED;
+            }
             
             if (isAudioPermission(permission)) {
                 Slog.d(TAG, "CheckSelfPermission: Granting audio permission: " + permission + " to " + packageName);
                 return PackageManager.PERMISSION_GRANTED;
             }
 
-            
             if (isStorageOrMediaPermission(permission)) {
                 Slog.d(TAG, "CheckSelfPermission: Granting storage/media permission: " + permission + " to " + packageName);
                 return PackageManager.PERMISSION_GRANTED;
             }
-            
             
             if (isNotificationOrXiaomiPermission(permission)) {
                 Slog.d(TAG, "CheckSelfPermission: Granting notification/Xiaomi permission: " + permission + " to " + packageName);
                 return PackageManager.PERMISSION_GRANTED;
             }
             
-            
-            return method.invoke(who, args);
+            return PackageManager.PERMISSION_GRANTED;
         }
     }
 
@@ -519,9 +513,12 @@ public class IPackageManagerProxy extends BinderInvocationStub {
     public static class DisableIconLoading extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            
-            Slog.d(TAG, "Blocking icon loading to prevent resource errors");
-            return null; 
+            try {
+                return method.invoke(who, args);
+            } catch (Throwable t) {
+                Slog.w(TAG, "Failed to getDrawable, returning null: " + t.getMessage());
+                return null;
+            }
         }
     }
 
