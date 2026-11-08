@@ -82,17 +82,36 @@ public class ActivityManagerCommonProxy {
                 String origPackage = intent.getPackage();
                 if (intent.getPackage() == null && intent.getComponent() == null) {
                     intent.setPackage(BActivityThread.getAppPackageName());
-                } else {
-                    origPackage = intent.getPackage();
                 }
                 resolveInfo = BlackBoxCore.getBPackageManager().resolveActivity(
                         intent,
                         GET_META_DATA,
                         StartActivityCompat.getResolvedType(args),
                         BActivityThread.getUserId());
+
+                // If still null, try without explicit package to allow any installed browser or handler
+                // inside virtual container to handle redirect URIs (e.g., http/https, market://, auth callbacks)
+                if (resolveInfo == null && (origPackage != null || intent.getComponent() != null)) {
+                    Intent unpinnedIntent = new Intent(intent);
+                    unpinnedIntent.setPackage(null);
+                    unpinnedIntent.setComponent(null);
+                    resolveInfo = BlackBoxCore.getBPackageManager().resolveActivity(
+                            unpinnedIntent,
+                            GET_META_DATA,
+                            StartActivityCompat.getResolvedType(args),
+                            BActivityThread.getUserId());
+                    if (resolveInfo != null) {
+                        intent.setPackage(null);
+                        intent.setComponent(null);
+                    }
+                }
+
                 if (resolveInfo == null) {
                     intent.setPackage(origPackage);
-                    return method.invoke(who, args);
+                    // Stay within virtual container: if cannot resolve inside virtual container,
+                    // do not leak intent or crash silently
+                    Slog.w(TAG, "Cannot resolve activity inside virtual container for: " + intent);
+                    return 0;
                 }
             }
 

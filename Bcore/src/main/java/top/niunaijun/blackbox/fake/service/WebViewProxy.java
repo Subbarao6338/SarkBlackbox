@@ -138,10 +138,7 @@ public class WebViewProxy extends ClassInvocationStub {
                     }
 
                     
-                    String userAgent = settings.getUserAgentString();
-                    if (userAgent != null && !userAgent.contains("BlackBox")) {
-                        settings.setUserAgentString(userAgent + " BlackBox");
-                    }
+                    // Do not alter User-Agent to avoid 'disallowed_useragent' or site compatibility issues
 
                     
                     try {

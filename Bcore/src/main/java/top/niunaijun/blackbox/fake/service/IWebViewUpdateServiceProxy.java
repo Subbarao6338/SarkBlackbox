@@ -63,23 +63,14 @@ public class IWebViewUpdateServiceProxy extends ClassInvocationStub {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             Slog.d(TAG, "WebViewUpdateService: getValidWebViewPackages called");
-            
             try {
-                
                 Object result = method.invoke(who, args);
-                if (result != null && result instanceof PackageInfo[]) {
-                    PackageInfo[] packages = (PackageInfo[]) result;
-                    if (packages.length > 0) {
-                        Slog.d(TAG, "WebViewUpdateService: Found " + packages.length + " valid WebView packages");
-                        return result;
-                    }
+                if (result != null) {
+                    return result;
                 }
             } catch (Exception e) {
                 Slog.w(TAG, "WebViewUpdateService: Failed to get valid WebView packages", e);
             }
-            
-            
-            Slog.d(TAG, "WebViewUpdateService: Returning empty array to prevent conflicts");
             return new PackageInfo[0];
         }
     }
